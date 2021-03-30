@@ -40,11 +40,11 @@ class AttentionQKV(nn.Module):
 
         # As defined is the Attention is all you need paper: https://arxiv.org/pdf/1706.03762.pdf
         key_dim = th.tensor(keys.shape[-1],dtype=th.float32)
-        similarity =  # Compute the similarity according to the QKV formula
+        similarity = th.matmul(queries, keys.permute(3, 2, 1, 0)) / th.sqrt(key_dim) # Compute the similarity according to the QKV formula
 
         masked_similarity = self.apply_mask(similarity, mask=mask) # We give you the mask to apply so that it is correct, you do not need to modify this.
-        weights =  # Turn the similarity into a normalized output. Remember that the last dim contains the features
-        output =  # Obtain the output
+        weights = nn.Softmax(dim=2), masked_similarity # Turn the similarity into a normalized output. Remember that the last dim contains the features
+        output =  th.matmul(weights, values) # Obtain the output
         ####################################  END OF YOUR CODE  ##################################
 
         return output, weights

@@ -50,16 +50,16 @@ class PositionEmbedding(nn.Module):
 
         # create the position embedding as described in the paper
         # use the `divisor` attribute instantiated in __init__ 
-        sin_embedding = 
-        cos_embedding = 
+        sin_embedding = th.sin(index / self.divisor)
+        cos_embedding = th.cos(index / self.divisor)
 
         # interleave the sin and cos. For more info see:
         # https://discuss.pytorch.org/t/how-to-interleave-two-tensors-along-certain-dimension/11332/3
-        position_shape = (1, , ) # fill in the other two dimensions
+        position_shape = (1, sequence_length, 2 * sequence_length) # fill in the other two dimensions
         position_embedding = th.stack((sin_embedding,cos_embedding), dim=3).view(position_shape)
 
         pos_embed_deviced = position_embedding.to(get_device())
-        return  # add the embedding to the input
+        return inputs + pos_embed_deviced # add the embedding to the input
         ####################################  END OF YOUR CODE  ##################################
 
 class TransformerFeedForward(nn.Module):
@@ -84,10 +84,10 @@ class TransformerFeedForward(nn.Module):
         ####################################  YOUR CODE HERE  ####################################
         # PART 4.1: Implement the FeedForward Layer.
         # As seen in fig1, the feedforward layer includes a normalization and residual
-        norm_input = 
-        dense_out = 
-        dense_drop =  # Add the dropout here
-        return  # Add the residual here
+        norm_input = self.norm(inputs)
+        dense_out = self.feed_forward(inputs)
+        dense_drop = self.dropout(dense_out) # Add the dropout here
+        return dense_drop + inputs # Add the residual here
         ####################################  END OF YOUR CODE  ##################################
 
 
@@ -117,16 +117,16 @@ class TransformerEncoderBlock(nn.Module):
         # Perform a multi-headed self-attention across the inputs.
 
         # First normalize the input with the LayerNorm initialized in the __init__ function (self.norm)
-        norm_inputs = 
+        norm_inputs = self.norm(inputs)
 
         # Apply the self-attention with the normalized input, use the self_attention mask as the optional mask parameter.
-        attn = 
+        attn = self.attention(norm_inputs, mask=self_attention_mask)
 
         # Apply the residual connection. res_attn should sum the attention output and the original, non-normalized inputs
-        res_attn =  # Residual connection of the attention block
+        res_attn = inputs + attn # Residual connection of the attention block
 
         # output passes through a feed_forward network
-        output = 
+        output = self.feed_forward(res_attn)
         return output
 
 
